@@ -1,69 +1,65 @@
-# React + TypeScript + Vite
+# blockchain-demo-client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React + TypeScript client for the blockchain demo API. It surfaces the state of the blockchain exposed by the Flask backend, lets you inspect and edit blocks, create wallets, and simulate transactions directly from the browser.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Visual blockchain explorer with block-by-block hash, nonce, and transaction details
+- Wallet creation, wallet list, and helper tooling for addressing
+- Transaction builder with amount validation, fee preview, and Mantine notifications
+- Block validation flow that highlights invalid indexes and allows remine fixes
+- Redux Toolkit state management, Mantine UI components, and Axios-based API client
 
-## Expanding the ESLint configuration
+## Prerequisites
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Node.js 20+ (LTS) and npm 10+
+- Running instance of the blockchain demo Flask API (the client expects `/v1` endpoints)
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Quick Start
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Configure environment variables by copying `.env.example`:
+   ```bash
+   cp .env.example .env
+   ```
+   - `VITE_API_BASE_URL` — absolute URL to the Flask API when not using the dev proxy
+   - `VITE_PROXY_TARGET` — Flask server URL used by Vite's proxy during `npm run dev`
+   - `VITE_API_PREFIX` — API path segment that should be proxied (defaults to `/v1`)
+3. Start the Vite dev server:
+   ```bash
+   npm run dev
+   ```
+4. Open the printed URL (typically `http://localhost:5173`) to interact with the UI.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+## Scripts
+
+- `npm run dev` — start the Vite dev server with hot module reloading
+- `npm run build` — type-check and produce a production build in `dist`
+- `npm run preview` — preview the production build locally
+- `npm run lint` — run ESLint with the Airbnb + TypeScript + Prettier rules
+- `npm run format` — format the entire repo with Prettier
+
+## Project Structure
+
+```
+src/
+  app/            # Redux store setup, global providers, and theming
+  components/     # Reusable modals for mining, transactions, and wallets
+  features/       # Redux slices, selectors, and async thunks
+  pages/          # Top-level routes (Home, Blockchain, Wallets, 404)
+  services/       # Axios client plus request/response TypeScript types
+  styles/         # SCSS variables and global styles
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Deployment
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x';
-import reactDom from 'eslint-plugin-react-dom';
+When deploying, make sure the `VITE_API_BASE_URL` points to the public Flask API URL and run `npm run build`. Serve the generated `dist` folder behind any static host (Netlify, Vercel, S3, etc.).
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
-```
+## Contributing
+
+1. Fork the repo and create a feature branch
+2. Install dependencies and follow the quick start steps
+3. Keep the TypeScript compiler, ESLint, and tests (if added) clean before opening a PR
