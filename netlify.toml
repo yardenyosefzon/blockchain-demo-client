@@ -1,0 +1,4 @@
+[[redirects]]
+from = "/api/*"
+to = "https://blockchain-demo-backend-gok7.onrender.com/v1/:splat"
+status = 200

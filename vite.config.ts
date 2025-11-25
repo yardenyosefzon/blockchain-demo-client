@@ -28,6 +28,7 @@ export default defineConfig(({ mode }) => {
           target: proxyTarget,
           changeOrigin: true,
           secure: false,
+          rewrite: (rewritePath) => rewritePath.replace(/^\/api/, '/v1')
         },
       },
     },
