@@ -98,7 +98,7 @@ export function MineModal({ opened, wallets, onClose, onSuccess }: Props) {
   };
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Mine Block">
+    <Modal opened={opened} onClose={onClose} title="Mine Block" closeOnClickOutside={false}>
       <Stack>
         <Text>
           Select the wallet that should receive the mining reward. Mining will include all pending

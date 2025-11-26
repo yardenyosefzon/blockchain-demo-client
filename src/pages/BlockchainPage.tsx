@@ -233,6 +233,9 @@ export default function BlockchainPage({ active }: Props) {
     setRemineLoading((prev) => ({ ...prev, [blockIndex]: true }));
     try {
       await remineBlock(blockIndex);
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, 1000);
+      });
       notifications.show({
         color: 'blue',
         title: `Remining block #${blockIndex}`,
