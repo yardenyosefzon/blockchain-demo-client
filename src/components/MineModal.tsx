@@ -39,7 +39,7 @@ export function MineModal({ opened, wallets, onClose, onSuccess }: Props) {
 
   const ensurePrize = useCallback(async () => {
     if (prize !== null) return prize;
-    return await loadPrize();
+    return loadPrize();
   }, [loadPrize, prize]);
 
   useEffect(() => {
