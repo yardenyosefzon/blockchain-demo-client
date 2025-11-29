@@ -226,6 +226,11 @@ export async function createWallet(name?: string): Promise<Wallet> {
   return mapWallet(wallet);
 }
 
+export async function seedMockData() {
+  const res = await api.post<ApiResponseEnvelope<unknown>>('/mock/seed');
+  return ensureResponseData(res.data);
+}
+
 export async function getWalletBalance(address: string): Promise<number> {
   const res = await api.post<ApiResponseEnvelope<WalletBalanceResponse | number>>(
     '/wallet/balance',

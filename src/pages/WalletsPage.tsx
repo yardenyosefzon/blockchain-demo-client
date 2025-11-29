@@ -18,6 +18,7 @@ import {
   fetchPendingBalances as fetchPendingBalancesApi,
   getWalletBalance,
   getWallets,
+  seedMockData,
 } from '@/services/api';
 import type { Wallet } from '@/services/api';
 import { formatAmount, shorten } from '@/utils/format';
@@ -74,6 +75,7 @@ export default function WalletsPage({ onActivity, active }: Props) {
   const [wallets, setWallets] = useState<WalletWithBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const [createOpened, createHandlers] = useDisclosure(false);
   const [transactionOpened, transactionHandlers] = useDisclosure(false);
   const [mineOpened, mineHandlers] = useDisclosure(false);
@@ -186,6 +188,28 @@ export default function WalletsPage({ onActivity, active }: Props) {
     onActivity?.();
   };
 
+  const handleSeedMockData = async () => {
+    setSeeding(true);
+    try {
+      await seedMockData();
+      notifications.show({
+        color: 'green',
+        title: 'Mock data seeded',
+        message: 'Wallets and blocks populated with demo data.',
+      });
+      await fetchWallets(true);
+      onActivity?.();
+    } catch (error) {
+      notifications.show({
+        color: 'red',
+        title: 'Seeding failed',
+        message: error instanceof Error ? error.message : 'Could not populate mock data',
+      });
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   if (loading) {
     return (
       <Container py="xl">
@@ -213,6 +237,9 @@ export default function WalletsPage({ onActivity, active }: Props) {
           </Button>
           <Button variant="light" onClick={mineHandlers.open} disabled={wallets.length === 0}>
             Mine Block
+          </Button>
+          <Button variant="outline" onClick={handleSeedMockData} loading={seeding}>
+            Seed Mock Data
           </Button>
         </Group>
 
