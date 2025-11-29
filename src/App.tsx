@@ -8,13 +8,15 @@ const NAV_TABS = [
   { value: 'blockchain', label: 'Blockchain' },
 ];
 
+const HEADER_HEIGHT = { base: 112, sm: 70 };
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>(NAV_TABS[0]?.value ?? 'wallets');
 
   return (
     <AppShell
       padding="0"
-      header={{ height: 70 }}
+      header={{ height: HEADER_HEIGHT }}
       withBorder={false}
       styles={{
         main: {
@@ -24,12 +26,21 @@ export default function App() {
       }}
     >
       <AppShell.Header>
-        <Group justify="space-between" px="lg" h="100%">
+        <Group
+          justify="space-between"
+          align="center"
+          px="lg"
+          py="sm"
+          h="100%"
+          gap="xs"
+          wrap="wrap"
+        >
           <Title order={3}>Blockchain Demo</Title>
           <Tabs
             value={activeTab}
             onChange={(value) => value && setActiveTab(value)}
             variant="outline"
+            keepMounted={false}
           >
             <Tabs.List>
               {NAV_TABS.map((tab) => (
