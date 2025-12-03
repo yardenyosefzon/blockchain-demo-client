@@ -15,14 +15,16 @@ import {
 import { notifications } from '@mantine/notifications';
 import { approveTransaction, buildAndSignTransaction } from '@/services/api';
 import type { BuildSignResponse, Wallet } from '@/services/api';
-import { shorten } from '@/utils/format';
+import { formatAmount, shorten } from '@/utils/format';
 
 type Props = {
   opened: boolean;
-  wallets: Wallet[];
+  wallets: WalletWithPending[];
   onClose: () => void;
   onSuccess: () => Promise<void> | void;
 };
+
+type WalletWithPending = Wallet & { pendingBalance?: number };
 
 const generatePrivateKey = (): string => {
   const cryptoApi = typeof globalThis !== 'undefined' ? globalThis.crypto : undefined;
@@ -51,6 +53,44 @@ export function TransactionModal({ opened, wallets, onClose, onSuccess }: Props)
   const [buildResult, setBuildResult] = useState<BuildSignResponse | null>(null);
   const [building, setBuilding] = useState(false);
   const [approving, setApproving] = useState(false);
+  const senderWallet = useMemo(
+    () => wallets.find((wallet) => wallet.address === sender),
+    [wallets, sender],
+  );
+
+  const confirmedBalance = senderWallet?.balance ?? 0;
+  const pendingBalance = senderWallet?.pendingBalance ?? confirmedBalance;
+  const availableToSpend = Math.max(0, Math.min(confirmedBalance, pendingBalance));
+
+  let numericAmount: number | null;
+  if (typeof amount === 'number') {
+    numericAmount = amount;
+  } else if (amount === '') {
+    numericAmount = null;
+  } else {
+    numericAmount = Number(amount);
+  }
+
+  let numericFee: number;
+  if (typeof fee === 'number') {
+    numericFee = fee;
+  } else if (fee === '') {
+    numericFee = 0;
+  } else {
+    numericFee = Number(fee);
+  }
+
+  const normalizedAmount =
+    numericAmount !== null && Number.isFinite(numericAmount) ? numericAmount : null;
+  const normalizedFee = Number.isFinite(numericFee) ? numericFee : 0;
+  const totalSpend = normalizedAmount !== null ? normalizedAmount + normalizedFee : null;
+  const amountTooHigh =
+    totalSpend !== null && Number.isFinite(totalSpend) && totalSpend > availableToSpend;
+  const amountError = amountTooHigh
+    ? `Amount${normalizedFee ? ' + fee' : ''} exceeds available balance (${formatAmount(
+        availableToSpend,
+      )} coins).`
+    : null;
 
   useEffect(() => {
     if (!sender) return;
@@ -96,7 +136,12 @@ export function TransactionModal({ opened, wallets, onClose, onSuccess }: Props)
   const prevStep = () => setActive((current) => Math.max(current - 1, 0));
 
   const canProceedStepOne =
-    sender && receiver && sender !== receiver && amount && Number(amount) > 0;
+    sender &&
+    receiver &&
+    sender !== receiver &&
+    normalizedAmount !== null &&
+    normalizedAmount > 0 &&
+    !amountTooHigh;
   const canProceedStepTwo = Boolean(privateKey);
 
   const handleGenerateNewKey = () => {
@@ -110,14 +155,17 @@ export function TransactionModal({ opened, wallets, onClose, onSuccess }: Props)
   };
 
   const handleBuild = async () => {
-    if (!sender || !receiver || !amount) return;
+    if (!sender || !receiver || normalizedAmount === null || normalizedAmount <= 0 || amountTooHigh) {
+      return;
+    }
+    const feePayload = Number.isFinite(numericFee) ? numericFee : undefined;
     setBuilding(true);
     try {
       const result = await buildAndSignTransaction({
         sender_address: sender,
         receiver_address: receiver,
-        amount: Number(amount),
-        fee: fee === '' ? undefined : Number(fee),
+        amount: normalizedAmount,
+        fee: feePayload,
         note: note.trim() || undefined,
         private_key: privateKey || undefined,
       });
@@ -203,6 +251,12 @@ export function TransactionModal({ opened, wallets, onClose, onSuccess }: Props)
               label="Amount"
               placeholder="Amount to send"
               value={amount}
+              error={amountError ?? undefined}
+              description={
+                senderWallet
+                  ? `Available to send: ${formatAmount(availableToSpend)} coins (confirmed ${formatAmount(confirmedBalance)}${senderWallet.pendingBalance !== undefined ? `, pending ${formatAmount(pendingBalance)}` : ''})`
+                  : undefined
+              }
               onChange={(value) => {
                 if (value === '' || value === null) {
                   setAmount('');
@@ -250,7 +304,7 @@ export function TransactionModal({ opened, wallets, onClose, onSuccess }: Props)
               description={
                 <Text size="sm" c="red" component="span">
                   For demo purposes this key is shown and editable. Try generating a different
-                  secret to see the signing validation fail.
+                  secret to see the transaction approval fail.
                 </Text>
               }
               value={privateKey}
