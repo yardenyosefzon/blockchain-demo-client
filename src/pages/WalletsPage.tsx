@@ -258,16 +258,14 @@ export default function WalletsPage({ onActivity, active }: Props) {
             return (
               <Card key={wallet.address} withBorder shadow="sm" padding="lg">
                 <Stack gap="xs">
-                  <Group justify="space-between" align="flex-start">
-                    <Text fw={600}>{wallet.name ?? shorten(wallet.address)}</Text>
-                    <Group gap="xs">
-                      <Badge color="cyan" variant="light">
-                        {formatAmount(confirmedBalance)} coins
-                      </Badge>
-                      <Badge color="yellow" variant="outline">
-                        Pending: {pendingDisplay} coins
-                      </Badge>
-                    </Group>
+                  <Text fw={600}>{wallet.name ?? shorten(wallet.address)}</Text>
+                  <Group gap="xs" wrap="wrap">
+                    <Badge color="cyan" variant="light">
+                      {formatAmount(confirmedBalance)} coins
+                    </Badge>
+                    <Badge color="yellow" variant="outline">
+                      Pending: {pendingDisplay} coins
+                    </Badge>
                   </Group>
                   <Text size="sm" c="dimmed">
                     Address: {wallet.address}
