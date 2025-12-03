@@ -1,4 +1,4 @@
 [[redirects]]
 from = "/api/*"
-to = "https://youthful-dory-yardrenyosefzon-becfc5d3.koyeb.app/v1/:splat"
+to = "https://blockchain-demo-backend-gok7.onrender.com/v1/:splat"
 status = 200
