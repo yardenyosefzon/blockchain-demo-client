@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentPropsWithoutRef } from 'react';
 import { notifications } from '@mantine/notifications';
 import { getChain, getWallets, remineBlock, updateBlock, validateChain } from '@/services/api';
 import type { Block } from '@/services/api';
 import { shorten } from '@/utils/format';
 import {
+  ActionIcon,
   Button,
   Card,
   Container,
@@ -19,6 +20,26 @@ import {
 type Props = {
   active?: boolean;
 };
+
+function CopyIcon(props: ComponentPropsWithoutRef<'svg'>) {
+  return (
+    <svg
+      aria-hidden
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}
 
 export default function BlockchainPage({ active }: Props) {
   const [blocks, setBlocks] = useState<Block[]>([]);
@@ -258,6 +279,32 @@ export default function BlockchainPage({ active }: Props) {
     }
   };
 
+  const handleCopyHash = useCallback(async (hash: string) => {
+    if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
+      notifications.show({
+        color: 'red',
+        title: 'Clipboard unavailable',
+        message: 'Copy is not supported in this browser.',
+      });
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(hash);
+      notifications.show({
+        color: 'green',
+        title: 'Hash copied',
+        message: 'Block hash copied to clipboard.',
+      });
+    } catch (error) {
+      notifications.show({
+        color: 'red',
+        title: 'Copy failed',
+        message: error instanceof Error ? error.message : 'Could not copy hash.',
+      });
+    }
+  }, []);
+
   return (
     <Container py="xl">
       <Stack gap="lg">
@@ -321,9 +368,20 @@ export default function BlockchainPage({ active }: Props) {
                     )}
                   </Group>
                   <Stack gap={4}>
-                    <Text size="sm" fw={500}>
-                      Hash
-                    </Text>
+                    <Group gap="xs" align="center">
+                      <Text size="sm" fw={500}>
+                        Hash
+                      </Text>
+                      <ActionIcon
+                        size="sm"
+                        variant={isBlockInvalid ? 'white' : 'subtle'}
+                        color={isBlockInvalid ? 'red' : 'gray'}
+                        aria-label={`Copy hash for block #${block.index}`}
+                        onClick={() => handleCopyHash(block.hash)}
+                      >
+                        <CopyIcon />
+                      </ActionIcon>
+                    </Group>
                     <Text size="sm" ff="monospace">
                       {block.hash}
                     </Text>
