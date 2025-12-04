@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentPropsWithoutRef } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentPropsWithoutRef,
+} from 'react';
 import { notifications } from '@mantine/notifications';
 import { getChain, getWallets, remineBlock, updateBlock, validateChain } from '@/services/api';
 import type { Block } from '@/services/api';

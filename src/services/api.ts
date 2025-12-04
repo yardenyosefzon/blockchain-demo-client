@@ -214,27 +214,32 @@ const mapWallet = (wallet: ApiWallet): Wallet => {
 };
 
 export async function getWallets(): Promise<Wallet[]> {
-  const res = await api.get<ApiResponseEnvelope<ApiWallet[]>>('/wallet');
+  const res = await api.get<ApiResponseEnvelope<ApiWallet[]>>('/wallets');
   const wallets = ensureResponseData<ApiWallet[]>(res.data);
   return wallets.map(mapWallet);
 }
 
 export async function createWallet(name?: string): Promise<Wallet> {
   const payload = name ? { name } : undefined;
-  const res = await api.post<ApiResponseEnvelope<ApiWallet>>('/wallet/create', payload);
+  const res = await api.post<ApiResponseEnvelope<ApiWallet>>('/wallets', payload);
+  const wallet = ensureResponseData<ApiWallet>(res.data);
+  return mapWallet(wallet);
+}
+
+export async function getWallet(address: string): Promise<Wallet> {
+  const res = await api.get<ApiResponseEnvelope<ApiWallet>>(`/wallets/${address}`);
   const wallet = ensureResponseData<ApiWallet>(res.data);
   return mapWallet(wallet);
 }
 
 export async function seedMockData() {
-  const res = await api.post<ApiResponseEnvelope<unknown>>('/mock/seed');
+  const res = await api.post<ApiResponseEnvelope<unknown>>('/admin/mock-seed');
   return ensureResponseData(res.data);
 }
 
 export async function getWalletBalance(address: string): Promise<number> {
-  const res = await api.post<ApiResponseEnvelope<WalletBalanceResponse | number>>(
-    '/wallet/balance',
-    { address },
+  const res = await api.get<ApiResponseEnvelope<WalletBalanceResponse | number>>(
+    `/wallets/${address}/balance`,
   );
   const data = ensureResponseData<WalletBalanceResponse | number>(res.data);
   if (typeof (data as WalletBalanceResponse)?.balance === 'number') {
@@ -246,41 +251,38 @@ export async function getWalletBalance(address: string): Promise<number> {
 export async function buildAndSignTransaction(
   payload: BuildSignRequest,
 ): Promise<BuildSignResponse> {
-  const res = await api.post<ApiResponseEnvelope<BuildSignResponse>>(
-    '/transaction/build_sign',
-    payload,
-  );
+  const res = await api.post<ApiResponseEnvelope<BuildSignResponse>>('/transactions/draft', payload);
   return ensureResponseData<BuildSignResponse>(res.data);
 }
 
 export async function approveTransaction(payload: TransactionApproveRequest) {
-  const res = await api.post<ApiResponseEnvelope<unknown>>('/transaction/approve', payload);
+  const res = await api.post<ApiResponseEnvelope<unknown>>('/transactions', payload);
   return ensureResponseData(res.data);
 }
 
 export async function mineBlock(miner: string): Promise<MineBlockResponse> {
-  const res = await api.post<ApiResponseEnvelope<MineBlockResponse>>('/mine', { miner });
+  const res = await api.post<ApiResponseEnvelope<MineBlockResponse>>('/mining/blocks', { miner });
   return ensureResponseData<MineBlockResponse>(res.data);
 }
 
 export async function getChain(): Promise<Block[]> {
-  const res = await api.get<ApiResponseEnvelope<Block[]>>('/chain');
+  const res = await api.get<ApiResponseEnvelope<Block[]>>('/blocks');
   return ensureResponseData<Block[]>(res.data);
 }
 
 export async function validateChain(): Promise<BlockValidationResult> {
-  const res = await api.get<ApiResponseEnvelope<ValidateResponse | boolean>>('/validate');
+  const res = await api.get<ApiResponseEnvelope<ValidateResponse | boolean>>('/blocks/validation');
   const data = ensureResponseData<ValidateResponse | boolean>(res.data);
   return parseValidationResult(data);
 }
 
 export async function getMempool(): Promise<Transaction[]> {
-  const res = await api.get<ApiResponseEnvelope<Transaction[]>>('/mempool');
+  const res = await api.get<ApiResponseEnvelope<Transaction[]>>('/transactions/mempool');
   return ensureResponseData<Transaction[]>(res.data);
 }
 
 export async function getPrize(): Promise<number> {
-  const res = await api.get<ApiResponseEnvelope<PrizeResponse>>('/prize');
+  const res = await api.get<ApiResponseEnvelope<PrizeResponse>>('/mining/reward');
   const prizeData = ensureResponseData<PrizeResponse>(res.data);
   const prizeValue = parsePrizeValue(prizeData);
   if (prizeValue === undefined || Number.isNaN(prizeValue)) {
@@ -293,7 +295,7 @@ export async function fetchPendingBalances(addresses: string[]): Promise<Record<
   const unique = Array.from(new Set(addresses.filter(Boolean)));
   if (unique.length === 0) return {};
 
-  const res = await api.post<ApiResponseEnvelope<CanSpendResponse>>('/pending_balance', {
+  const res = await api.post<ApiResponseEnvelope<CanSpendResponse>>('/wallets/pending-balances', {
     addresses: unique,
   });
   const data = ensureResponseData<CanSpendResponse>(res.data);
@@ -301,12 +303,15 @@ export async function fetchPendingBalances(addresses: string[]): Promise<Record<
 }
 
 export async function updateBlock(payload: UpdateBlockRequest) {
-  const res = await api.post<ApiResponseEnvelope<unknown>>('/block/', payload);
+  const res = await api.patch<ApiResponseEnvelope<unknown>>(
+    `/blocks/${payload.index}`,
+    { previous_hash: payload.previous_hash },
+  );
   return ensureResponseData(res.data);
 }
 
 export async function remineBlock(index: number) {
-  const res = await api.post<ApiResponseEnvelope<unknown>>('/block/remine', { index });
+  const res = await api.post<ApiResponseEnvelope<unknown>>(`/blocks/${index}/remine`);
   return ensureResponseData(res.data);
 }
 
