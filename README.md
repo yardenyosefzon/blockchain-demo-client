@@ -57,9 +57,3 @@ src/
 ## Deployment
 
 When deploying, make sure the `VITE_API_BASE_URL` points to the public Flask API URL and run `npm run build`. Serve the generated `dist` folder behind any static host (Netlify, Vercel, S3, etc.).
-
-## Contributing
-
-1. Fork the repo and create a feature branch
-2. Install dependencies and follow the quick start steps
-3. Keep the TypeScript compiler, ESLint, and tests (if added) clean before opening a PR
